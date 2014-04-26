@@ -38,7 +38,7 @@ library(data.table)
 library(reshape2)
 
 # Set working directory
-setwd("/media/ADORNES/Profissional/Mestrado/MOOC/Coursera Specialization Data Science JHU/repo/GettingAndCleaningData")
+setwd("~/MOOC/Coursera Specialization Data Science JHU/repo/GettingAndCleaningData")
 
 # Free memory space
 rm(list=ls())
