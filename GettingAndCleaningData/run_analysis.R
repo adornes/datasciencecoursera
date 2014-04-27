@@ -29,13 +29,16 @@ readAndMergeData <- function() {
 	activities$activity <- as.factor(activities$activity)
 
 	# read subject column into a vector
-	data <- rbind(read.table("./dataset/train/subject_train.txt", col.names=c("subject")), read.table("./dataset/test/subject_test.txt",   col.names=c("subject")))
+	data <- rbind(read.table("./dataset/train/subject_train.txt"), read.table("./dataset/test/subject_test.txt"))
 
 	# read and merge activity codes
-	data <- cbind(data, rbind(read.table("./dataset/train/y_train.txt", col.names=c("activity_id")), read.table("./dataset/test/y_test.txt",   col.names=c("activity_id"))))
+	data <- cbind(data, rbind(read.table("./dataset/train/y_train.txt"), read.table("./dataset/test/y_test.txt")))
 
 	# read and merge feature data
-	data <- cbind(data, rbind(read.table("./dataset/train/X_train.txt", col.names=features$name), read.table("./dataset/test/X_test.txt",   col.names=features$name)))
+	data <- cbind(data, rbind(read.table("./dataset/train/X_train.txt"), read.table("./dataset/test/X_test.txt")))
+
+	# set column names
+	names(data) <- append(c("subject","activity_id"), features$name)
 
 	# merge activity labels and discards activity id
 	data <- merge(activities, data, by.x="id", by.y="activity_id", all.y=TRUE, sort=TRUE)
@@ -51,7 +54,7 @@ readAndMergeData <- function() {
 cleanData <- function(data) {
 
 	# Apply grep to filter subject, activity, mean and std columns
-	relevant_cols <- grep("subject|activity|mean|std", names(data))
+	relevant_cols <- grep("subject|activity|mean\\(\\)|std\\(\\)", names(data))
 
 	# select relevant columns
 	data <- data[,relevant_cols]
