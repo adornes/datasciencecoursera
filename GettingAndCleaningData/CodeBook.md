@@ -1,5 +1,5 @@
 # CodeBook
-# Description of variables, data and transformations performed
+## Description of variables, data and transformations performed
 
 As described in the README, the original data for this data analysis project can be found in the following link:
 
@@ -12,7 +12,7 @@ The original data was separated into training and test files, which in turn refe
 1.	Training and test data were merged into one data set
 2.	Subject and activity data were joined to this data set
 3.	Activity data was transformed to more informative and descriptive values instead of numbers
-4.	Variables were reduced to *mean* and *standard deviation*
+4.	Variables were reduced to *mean* and *standard deviation*, considering columns with **-mean()** and **-std()** and passing these to **Mean** and **Std**
 5.	A **second independent tidy data set** was created with the average of each variable for each activity and each subject
 
 ### Variables
@@ -54,13 +54,6 @@ For this project, only *mean* and *std (standard deviation)* attributes were rel
  
 > The set of variables that were estimated from these signals are: 
  
-*	mean(): Mean value
-*	std(): Standard deviation
+*	Mean: Mean value
+*	Std: Standard deviation
  
-> Additional vectors obtained by averaging the signals in a signal window sample. These are used on the angle() variable:
- 
-*	gravityMean
-*	tBodyAccMean
-*	tBodyAccJerkMean
-*	tBodyGyroMean
-*	tBodyGyroJerkMean
