@@ -3,3 +3,4 @@ dataset
 .Rhistory
 .RData
 tidy_data.txt
+.DS_Store
