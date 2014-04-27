@@ -1,7 +1,7 @@
 # Getting and Cleaning Data - Final assignment
 ## Part of Specialization in Data Science, by Johns Hopkins University, through Coursera
 
-The purpose of this project is to demonstrate your ability to collect, work with, and clean a data set. 
+The purpose of this project is to demonstrate ability to collect, work with, and clean a data set. 
 The goal is to prepare tidy data that can be used for later analysis. 
 
 One of the most exciting areas in all of data science right now is wearable computing - see for example this article . 
