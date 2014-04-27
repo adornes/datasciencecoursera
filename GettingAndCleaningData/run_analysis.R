@@ -59,6 +59,10 @@ cleanData <- function(data) {
 	# select relevant columns
 	data <- data[,relevant_cols]
 
+	# Improving column names
+	names(data) <- gsub("\\-mean\\(\\)", names(data), replacement="Mean")
+	names(data) <- gsub("\\-std\\(\\)", names(data), replacement="Std")
+
 	data
 }
 
@@ -69,7 +73,7 @@ cleanData <- function(data) {
 buildingTidyData <- function(data) {
 
 	# feature and group cols
-	feature_cols <- grep("mean|std", names(data))
+	feature_cols <- grep("Mean|Std", names(data))
 	group_cols   <- grep("subject|activity", names(data))
 
 	# performing average calculation for each group
