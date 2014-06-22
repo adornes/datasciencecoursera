@@ -1,0 +1,144 @@
+Practical Machine Learning wih Weight Lifting Exercise Dataset
+==============================================================
+
+This is an analysis performed as partial requirement for completing the [Practical Machine Learning](https://www.coursera.org/course/predmachlearn) course, as part of the [Data Science Specialization](https://www.coursera.org/specialization/jhudatascience/1?utm_medium=courseDescripTop) by [Johns Hopkins University](http://www.jhu.edu/), through [Coursera](https://www.coursera.org/).
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify *how well* they do it. 
+
+This project aims at using data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants to **predict** the manner in which they did the exercise. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
+
+## Dataset
+
+More information about the dataset is available from the website here: [http://groupware.les.inf.puc-rio.br/har](http://groupware.les.inf.puc-rio.br/har) (see the section on the Weight Lifting Exercise Dataset). 
+
+The training data for this project are available [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv). 
+
+The test data are available [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv). 
+
+The data for this project come from this source: [http://groupware.les.inf.puc-rio.br/har](http://groupware.les.inf.puc-rio.br/har).
+
+```{r, results='hide', echo=FALSE, message=F, warning=F, comment=NA}
+# If data was not downloaded yet
+if(!file.exists("pml-training.csv") || !file.exists("pml-testing.csv")){
+  download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", destfile="pml-training.csv", method="curl")
+  download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", destfile="pml-testing.csv", method="curl")
+}
+
+# Load libraries
+library(caret)
+library(randomForest)
+library(reshape)
+```
+
+## Getting and Cleaning the data
+
+The following lines read *training* and *testing* raw data from the *csv* files:
+
+```{r, results='hide'}
+raw.training = read.csv("pml-training.csv")
+raw.testing  = read.csv("pml-testing.csv")
+```
+
+The raw data contains, though, many columns with NA and empty values, which are not useful for the prediction and must be discarded:
+
+```{r}
+relevant.vars <- names(raw.training)[apply(raw.training, 2, function(x){ table(is.na(x))[1]==nrow(raw.training) })]
+
+training <- raw.training[,relevant.vars]
+testing  <- raw.testing[,relevant.vars[-length(relevant.vars)]]
+
+relevant.vars <- melt(apply(training,2,function(x) sum(ifelse(x=="",1,0)))==0)
+relevant.vars <- rownames(relevant.vars)[relevant.vars$value==TRUE]
+
+training <- training[,relevant.vars]
+testing  <- testing[,relevant.vars[-length(relevant.vars)]]
+
+training <- training[,names(training[-c(1:7,length(training))])]
+testing  <- testing[,names(testing[-c(1:7)])]
+```
+
+Finally, we remove multicollinearity, by analysing the correlations among numerical variables.
+
+```{r}
+highCorr <- findCorrelation(cor(training), cutoff = .75)
+
+testing  <- testing[, -highCorr]
+
+classe   <- raw.training$classe
+training <- cbind(classe, training[, -highCorr]) 
+```
+
+## Learning the Prediction Model
+
+Given that the *training* and *testing* sets are already individually provided, we use the [createDataPartition](http://caret.r-forge.r-project.org/splitting.html) function for dividing the *training* set into *training* and *cross validation* sets, with 70% and 30% of the observations, respectively. 
+
+```{r}
+inTrain <- createDataPartition(y=training$classe, p=0.7, list=FALSE)
+training   <- training[ inTrain, ]
+validating <- training[-inTrain, ]
+```
+
+The number of observations for *training*, *cross validation* and *testing* sets is as follows:
+
+```{r}
+c(nrow(training), nrow(validating), nrow(testing))
+```
+
+By running the [random-forest algorithm](http://en.wikipedia.org/wiki/Random_forest) over the *training* set, we gerenate the *prediction model*, as follows:
+
+```{r}
+fit <- randomForest(classe~., data=training, importance=TRUE, ntree=10)
+print(fit)
+```
+
+## Prediction and Accuracy over Cross Validation dataset
+
+Once we have the learned model, we can now run a prediction with it over the *cross validation* data. The generated [confusion matrix](http://en.wikipedia.org/wiki/Confusion_matrix) is as follows:
+
+```{r}
+prediction.validation = predict(fit, newdata=validating)
+confusionMatrix(validating$classe, prediction.validation)
+```
+
+```{r}
+accuracy <- sum(as.numeric(prediction.validation==validating$classe)) * 100 / nrow(validating)
+message("The accuracy achieved over the cross validation set is ", 
+        format(round(accuracy, 2), nsmall = 2), "%")
+```
+
+## Prediction over Testing dataset
+
+Now we rebuild the regression model over *training* and *cross validation* sets together, and finally perform the model prediction over the *testing* set:
+
+```{r}
+training <- rbind(training, validating)
+
+fit <- randomForest(classe~., data=training, importance = TRUE, ntree=10)
+
+prediction.test = predict(fit, newdata=testing)
+prediction.test
+```
+
+```{r}
+table(prediction.test)
+```
+
+```{r, echo=FALSE, results='hide'}
+answers<- as.vector(prediction.test)
+
+setwd("submission/")
+
+file.remove(list.files())
+
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+pml_write_files(answers)
+
+setwd("..")
+```
